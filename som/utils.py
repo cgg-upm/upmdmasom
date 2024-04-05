@@ -79,7 +79,7 @@ class somutils:
             # Loop over data dimensions and create text annotations.
             for i in range(pSom.nrows):
                 for j in range(pSom.ncols):
-                    text = ax.text(j, i, pSom.mat_count[i, j], ha="center", va="center", color="w")
+                    text = ax.text(j, i, pSom.mat_count[pSom.nrows - i - 1, j], ha="center", va="center", color="w")
 
         elif pSom.vicinity == 'hexagonal':
 
@@ -97,7 +97,7 @@ class somutils:
             for i in range(pSom.nrows):
                 xc = 0 if i % 2 == 0 else a  ## Se vuelve a poner la xc a su valor inicial
                 for j in range(pSom.ncols):
-                    countValueNeuron = pSom.mat_count[i, j]
+                    countValueNeuron = pSom.mat_count[pSom.nrows - i - 1, j]
                     hexa = patches.RegularPolygon((xc, yc), 6,
                                                   radius=r,
                                                   orientation=0,
@@ -107,7 +107,6 @@ class somutils:
                                                   fill=True)
                     ax.add_patch(hexa)
                     plt.text(xc, yc, str(countValueNeuron), color='k', va="center", ha="center")
-                    # plt.text(xc, yc, str(pSom.mat_count[pSom.nrows - i - 1, j]), color='k', va='center', ha='center')
                     xc = xc + 2 * a
                 yc = yc + r + a / 2
 
@@ -427,6 +426,35 @@ class somutils:
         _codes = _codes.reshape(_codes.shape[0] * _codes.shape[1], _codes.shape[2])
         return _codes
 
+    def plotEstimation_hexagon(pSom, mat, ax_, fig):
+        maxCount = np.max(mat)
+
+        cmap = mpl.colormaps["Spectral"]
+        norm = colors.Normalize(0, maxCount)
+
+        xc, yc = 0, 0  # Se inicializa el valor del centro del hexagono
+        r = 1  # Valor del radio del hexagono
+        a = r * np.sqrt(3) / 2  # Valor de la apotema
+        for i in range(pSom.nrows):
+            xc = 0 if i % 2 == 0 else a  ## Se vuelve a poner la xc a su valor inicial
+            for j in range(pSom.ncols):
+                countValueNeuron = mat[i, j]
+                hexa = patches.RegularPolygon((xc, yc), 6,
+                                              radius=r,
+                                              orientation=0,
+                                              facecolor=cmap(norm(countValueNeuron)),
+                                              # facecolor='red',
+                                              edgecolor='w',
+                                              fill=True)
+                ax_.add_patch(hexa)
+                xc = xc + 2 * a
+            yc = yc + r + a / 2
+
+        fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax_)
+        ax_.axis('equal')
+        ax_.set_xticks([])
+        ax_.set_yticks([])
+
     def plotEstimationMap(pSom, figsize=(13, 7), title="mapa de estimaciones"):
 
         mat = np.zeros((pSom.nrows, pSom.ncols))
@@ -440,5 +468,10 @@ class somutils:
         axs.set_yticks([])
         # Remove the axes
         axs.axis('off')
-        sns.heatmap(mat, cmap='RdYlGn', ax=axs)
+        # sns.heatmap(mat, cmap='RdYlGn', ax=axs)
+        if pSom.vicinity == 'rectangular':
+           sns.heatmap(mat, cmap='RdYlGn', ax=axs)
+        else:  #
+           somutils.plotEstimation_hexagon(pSom, mat, axs, fig)
+
         plt.show()
