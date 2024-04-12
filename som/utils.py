@@ -11,6 +11,9 @@ import random as rd
 
 class somutils:
 
+
+    def __init__(self):
+
     def plot_Cluster(pSom, n_clusters, figsize=(15, 15), title='SOM con clustering y recuento de nodos'):
         ## Reformateo de las coordenadas de los pesos en cada nodo para obtener un matriz X que pasar el clustering
         X_pesos = pSom.SOM.reshape(pSom.SOM.shape[0] * pSom.SOM.shape[1], pSom.SOM.shape[2])
@@ -428,6 +431,12 @@ class somutils:
         return _codes
 
     def plotEstimationMap(pSom, figsize=(13, 7), title="mapa de estimaciones"):
+        '''
+
+        :param figsize:
+        :param title:
+        :return:
+        '''
 
         mat = np.zeros((pSom.nrows, pSom.ncols))
         for f in range(pSom.nrows):
@@ -440,5 +449,34 @@ class somutils:
         axs.set_yticks([])
         # Remove the axes
         axs.axis('off')
-        sns.heatmap(mat, cmap='RdYlGn', ax=axs)
+        if pSom.vicinity == 'rectangular':
+            sns.heatmap(mat, cmap='RdYlGn', ax=axs)
+        elif pSom.vicinity == 'hexagonal':
+            #maxCount = np.max(mat)
+            #cmap = mpl.colormaps["Spectral"]
+            norm = colors.Normalize(0, maxCount)
+
+            xc, yc = 0, 0  # Se inicializa el valor del centro del hexagono
+            r = 1  # Valor del radio del hexagono
+            a = r * np.sqrt(3) / 2  # Valor de la apotema
+            for i in range(pSom.nrows):
+                xc = 0 if i % 2 == 0 else a  ## Se vuelve a poner la xc a su valor inicial
+                for j in range(pSom.ncols):
+                    countValueNeuron = mat[i, j]
+                    hexa = patches.RegularPolygon((xc, yc), 6,
+                                                  radius=r,
+                                                  orientation=0,
+                                                  facecolor=cmap(norm(countValueNeuron)),
+                                                  # facecolor='red',
+                                                  edgecolor='w',
+                                                  fill=True)
+                    ax_.add_patch(hexa)
+                    xc = xc + 2 * a
+                yc = yc + r + a / 2
+
+            fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax_)
+            ax_.axis('equal')
+            #ax_.set_xticks([])
+            #ax_.set_yticks([])
+
         plt.show()
